@@ -1,14 +1,6 @@
-import schedule
-import time
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
-from dotenv import load_dotenv
 from financial_agent import financial_agent
-import os
-
-load_dotenv()
-
-SENDGRID_API_KEY = os.getenv("SENDGRID_API_KEY")
 
 def send_email():
 
@@ -24,7 +16,7 @@ def send_email():
         html_content=html_content
     )
     try:
-        sg = SendGridAPIClient(SENDGRID_API_KEY)
+        sg = SendGridAPIClient('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')
         response = sg.send(message)
         print(response.status_code)
         print(response.body)
@@ -32,8 +24,8 @@ def send_email():
     except Exception as e:
         print(e.message)
 
-schedule.every().day.at("16:52").do(send_email)
+# schedule.every().day.at("16:52").do(send_email)
 
-while True:
-    schedule.run_pending()
-    time.sleep(60)  
+# while True:
+#     schedule.run_pending()
+#     time.sleep(60)  

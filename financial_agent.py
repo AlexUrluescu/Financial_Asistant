@@ -2,19 +2,32 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from google.oauth2 import service_account
 import json
 from dotenv import load_dotenv
-from langchain_community.tools.tavily_search.tool import TavilySearchResults
-from langchain.agents import initialize_agent, tool, Tool
+from langchain.agents import initialize_agent, Tool
 from datetime import datetime
-from langchain.tools.yahoo_finance_news import YahooFinanceNewsTool
-from langchain.document_loaders import WebBaseLoader
 import feedparser
 import requests
 from bs4 import BeautifulSoup
-
+import os
 
 load_dotenv()
 
+json_string = """
+{
+  "type": "service_account",
+  "project_id": "gen-lang-client-0588309521",
+  "private_key_id": "bb9c74146c3b6452f72abf8d4d83f83adbe52a8e",
+  "private_key": "-----BEGIN PRIVATE KEY-----\\nMIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQDDCX0Pf+TOol+I\\nOsgLtqbMvUWnDXXgljtfVSrVQX59LSXAUteMolJZa9Ve2UhT5CXz+SnwoMaC4VxH\\nIyyjzoZAb6pFwDUUEiVvpNdU0s1KvPozJTMk6hQXo5WYMYIW0Hoaq0zdwd+Qw2uJ\\nlQD127gfgQEKzvO73MLU9t9SV5sc0OTZ2jeZv6cyh/q/oinYIeXc2pxX+gK5uaWC\\nSMTn0MP3P88wr4egDbixn6WjLM4dyHCDODyqYUKocC4ulMCTDjsPzoPcml1mo1ak\\nXhdDTbRs9q8kYhK3+nXhIUKC00RLQehKZ26AIQqeQzPo8iF0bvxoR6fszQxTdPZW\\nUENzntkFAgMBAAECggEAXXRve3zR+31sf0+DSbGUzWgoNvrJL/tsqaqaoqMGZB69\\nByHq7RVelkCIdjFxadlZokUTJp0zYcVwvRmKq1crlzaqhU+rX1munIeFMrzr59MT\\npGw/zIFpbUZSSSH37syopZzNcTkT0j8BiWRfmG9XE6lyAWbW/X6z0O4WZlNaHPzY\\nbxLgovU0CP0osz3Bycu+vr00ChwfX2PwHKWBBlvhA4A7d+Iq8kGe/9H/snHRG+sX\\nKr1ZhOUPxXsD6Mynf1n7Fjvfns898q1EvjAWr6inGbj91YozUrfoq5xCCW65tqh6\\nQpMB6ALlDw3aSfYKONJq0cLX8vF8S4ampmvhCo845QKBgQD2gwxLamTXdNiQBjdY\\nThVtlNiU53hUa9DfrLoePLpKYp0Y4O36R5enBjY1Yf0yUnge5TUjbqtk+8mB8nqv\\n6uCzw50YcZCQXEOFThYLv9w3KEcSYNhhhmpILRhIQYAdKMt3jn75kvB3/6KBZN+R\\nHMktlkM7GeXOx9HlnAic7Gbo1wKBgQDKiz6Fhu8U6wJd7i6XNOEnRSFy8lfyR8jW\\nQ5jkizSs5Rg9tWhL2zt8bPuy846/P/GsIZlQogGX54kLgGdP09H6HCDv8OejNGWD\\nOmkq/Z/BH4tY6vYI1l0o20/6GlGrAf/eccM6+ziaGopI0UUlY1tmCDDOsxUHW8Kc\\ny9XNhjKFgwKBgQDOvCSpcrbTgqjEUJJFumZ6GiRw7Jabpjfr/f2wshlBnOZHIQwz\\no6rpZmo75svjUgpvTqZ76qpO7GKYWnTN59s+p0SuZT9p8hamS1Bt1h+nGl5QaWvO\\njl2/3iHJJzV8PuQ0hgqy36pP2NG+VoywNEX7t1L208dI3YeIWo1WnWPIzQKBgQC2\\nFBUhblrRIC8hh7PkhEn/xnq6XbfH+tZGH8B7e9TftJdlKgZXYv8H7OUcSy1BKle0\\nWQP9Y5YxG5iseULmlVIHGHBXouZpZfn3zXOrjRKnRxc62QZSjXpz9yvfdveB1qtR\\nKk3KYPrSNheoPFB/uuD4SVavCnhWBBxgXjGWsBQMxwKBgQDrGFnleJ3DRsbmkNMJ\\nVMGvjNbCWx6OUqlHEQdqTj0LO1bSDZmjTW5UkwpUzKjYvHbsKcGjOE9PwLokxw0s\\nHmMOOKOvR5lMTnj440GVSZ3vB6xrbrGDBLTswKjMQJHg8Se2XgudI9aIUZKnvBvN\\nXqOt1PNAi4LTn938iUrWkGl08A==\\n-----END PRIVATE KEY-----\\n",
+  "client_email": "gemini-langchain-service@gen-lang-client-0588309521.iam.gserviceaccount.com",
+  "client_id": "103946725384589893375",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/gemini-langchain-service%40gen-lang-client-0588309521.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
+"""
 
+# credentials_info = json.loads(os.getenv("GOOGLE_CREDENTIALS"))
 
 credentials_info = json.loads(json_string)
 credentials = service_account.Credentials.from_service_account_info(credentials_info)
